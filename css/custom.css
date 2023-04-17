@@ -1,0 +1,419 @@
+html{ -webkit-tap-highlight-color:rgba(0,0,0,0); }
+body { font-family: 'Raleway', sans-serif; font-weight: normal; font-style: normal; font-size: 18px; margin: 0px; color: #333; font-weight: 500; }
+h1,h2,h3,h4,h5,h6{
+  font-family: 'Raleway', sans-serif;
+}
+
+#main-menu{
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 14px 25px 0px;
+   position: relative;
+ }
+
+.uk-navbar-nav li a{
+    font-family: 'Raleway', sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    color:#000;
+    letter-spacing: 1.2px;
+  }
+
+  .uk-navbar-nav > li > a{
+    padding: 0px 10px;
+  }
+
+  .text-size-1{
+    font-size: 38px;
+    line-height: 40px;
+    display: block;
+  }
+  
+  .text-size-2{
+    font-size: 48px;
+    line-height: 54px;
+    display: block;
+    font-weight: 800;
+  }
+
+  .text-size-3{
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    display: block;
+  }
+
+  .text-heading-medium{
+    font-size:22px;
+    line-height: 26px;
+    font-weight: 700;
+  }
+
+  .text-heading{
+    font-size:30px;
+    line-height: 30px;
+    font-weight: 800;
+  }
+
+  .uk-card-media-top ~ .uk-margin-small-top{
+    line-height: 22px;
+  } 
+
+.uk-divider-small {
+    height: 1px;
+    width: 65px;
+}
+  .uk-divider-small::after {
+      border-top: 3px solid #000;
+  }
+
+  ul.bullet-list{
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+  }
+  
+  ul.bullet-list li{
+    background: #F8F8F8;
+   border: 2px solid #D5D5D5;
+   border-radius: 10px;
+    padding:15px 25px;
+    margin-bottom:15px;
+  }
+
+  ol.bullet-list{
+    margin: 0px;
+    padding: 0px;
+    list-style-position:inside;
+  }
+  
+  ol.bullet-list li{
+    background: #F8F8F8;
+   border: 2px solid #D5D5D5;
+   border-radius: 10px;
+    padding:15px 25px;
+    margin-bottom:15px;
+  }
+
+  .bullet-list .dates,
+.bullet-list .dy{
+  vertical-align: top;
+  display: inline-block;
+}
+
+.bullet-list .dates span,
+.bullet-list .dy span{
+  display: inline-block;
+  font-weight: bold;
+}
+
+.bullet-list .content,
+.bullet-list .description{
+ display: block;
+}
+
+.bullet-list .content h4,
+.bullet-list .content p,
+.bullet-list .description p{
+ display: inline-block;
+  padding: 0px;
+  margin: 0px;
+}
+
+.bullet-list em{
+  color:#333;
+  font-weight: 600;
+}
+
+  .item.mix{
+    border-radius: 10px;
+    padding:15px 25px;
+   margin-bottom:15px;
+   font-size:16px;
+   
+  }
+
+  .item.box-blue{
+    background: #EFF3F7 0% 0% no-repeat padding-box;
+   border: 2px solid #c4d3ee;
+   }
+
+   .item.box-red{
+    background: #FAF5F6 0% 0% no-repeat padding-box;
+ border: 2px solid #E8B1C0;
+   }
+
+   .item.box-green{
+    background: #EDFFFB 0% 0% no-repeat padding-box;
+    border: 2px solid #9BD9CB;
+   }
+
+   .item.box-purple{
+    background: #F2F2FF 0% 0% no-repeat padding-box;
+border: 2px solid #A0A2DD; 
+   }
+
+   .item.box-grey{
+    background: #e9f1f4 0% 0% no-repeat padding-box;
+    border: 2px solid #92a6b0; 
+    
+   }
+   
+   .item .pubtitle{
+     margin: 0px;
+     padding: 5px 0px;
+     font-size:16px;
+
+   }
+   
+   .item .pubcite{
+     font-style: italic;
+     font-size: 14px;
+   }
+
+  .pubauthor strong:after{
+    content: ' â€¢';
+}
+
+#research .item .pubtitle{
+  padding: 0px;
+}
+
+#publications .pubauthor strong:after{
+content: inherit;
+}
+
+.jpaper .pubcite span:after{
+  content: ' â€¢';
+}
+
+.text-heading span{
+  font-size: 20px;
+  line-height: 28px;
+  display: block;
+  font-weight: 500;
+}
+
+.scroll-top{
+  position: fixed;
+  right: 10px;
+  bottom: 20px;
+  color:#999;
+}
+
+
+.return-top{
+position: relative;
+height: 0px;
+right:0px;
+text-align: right;
+color:#666;
+}
+
+.color-1{
+  color:#e21444;
+  font-weight: 700;
+}
+
+.color-1 ~ hr.uk-divider-small::after{
+  border-color: #e21444;
+}
+
+.color-2{
+  color:#673BB8;
+  font-weight: 700;
+}
+
+.color-2 ~ hr.uk-divider-small::after{
+  border-color: #673BB8;
+}
+
+.color-3{
+  color:#3F51B5;
+  font-weight: 700;
+}
+
+.color-3 ~ hr.uk-divider-small::after{
+  border-color: #3F51B5;
+}
+
+.color-4{
+  color:#795547;
+  font-weight: 700;
+}
+
+.color-4 ~ hr.uk-divider-small::after{
+  border-color: #795547;
+}
+
+.color-5{
+  color:#4cb050;
+  font-weight: 700;
+}
+
+.color-5 ~ hr.uk-divider-small::after{
+  border-color: #4cb050;
+}
+
+.color-6{
+  color:#019688;
+  font-weight: 700;
+}
+
+.color-6 ~ hr.uk-divider-small::after{
+  border-color: #019688;
+}
+
+.color-7{
+  color:#ff9700;
+  font-weight: 700;
+}
+
+.color-7 ~ hr.uk-divider-small::after{
+  border-color: #ff9700;
+}
+
+.color-8{
+  color:#fdec3a;
+  font-weight: 700;
+}
+
+.color-8 ~ hr.uk-divider-small::after{
+  border-color: #fdec3a;
+}
+
+.color-9{
+ color:#8bc24a; 
+ font-weight: 700;
+}
+
+.color-9 ~ hr.uk-divider-small::after{
+  border-color: #8bc24a;
+}
+
+.color-10{
+  color:#04a9f5;
+  font-weight: 700;
+}
+
+.color-10 ~ hr.uk-divider-small::after{
+  border-color: #04a9f5;
+}
+
+.color-11{
+  color:#607d8b;
+  font-weight: 700;
+}
+
+.color-11 ~ hr.uk-divider-small::after{
+  border-color: #607d8b;
+}
+
+.color-12{
+  color:#2296F3;
+  font-weight: 700;
+}
+
+.color-12 ~ hr.uk-divider-small::after{
+  border-color: #2296F3;
+}
+
+.color-13{
+  color:#FE5721;
+  font-weight: 700;
+}
+
+.color-13 ~ hr.uk-divider-small::after{
+  border-color: #FE5721;
+}
+
+
+.text-rotate{
+  transform: rotate(180deg);
+  writing-mode: tb-rl;
+  text-transform:uppercase;
+  font-size:14px;
+  font-weight: 700;
+}
+
+@media screen and (max-width: 1280px) {
+  div.return-top {
+    padding-right: 10px;
+  }
+ .scroll-top{
+  right:0px;
+  }
+}
+
+@media screen and (max-width: 959px) {
+
+  body { font-size: 16px;  }
+
+  div.return-top img {
+   width: 20px;
+  }
+   div.return-top span{
+    padding:0px;
+  }
+  .scroll-top svg{
+    width: 20px;
+  }
+  .text-size-1{
+    font-size: 26px;
+    line-height: 32px;
+  }
+  
+  .text-size-2{
+    font-size: 32px;
+    line-height: 44px;
+  }
+
+  .text-size-3{
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .text-heading-medium{
+    font-size:22px;
+  }
+
+  .text-heading{
+    font-size:24px;
+  }
+
+  .text-heading span{
+    font-size: 22px;
+  }
+
+  .item.mix{
+   font-size:14px;
+  }
+
+  .item .pubtitle{
+    font-size:14px;
+}
+  
+  .item .pubcite{
+    font-size: 12px;
+  }
+
+  .bullet-list .content h4,
+.bullet-list .content p,
+.bullet-list .description p{
+font-size: 14px;
+}
+
+ul.bullet-list,
+ol.bullet-list{
+  font-size: 14px;
+}
+
+.uk-section-large{
+  padding:0px;
+}
+}
+
+@media screen and (max-width: 640px) {
+  .uk-divider-small{
+    margin: 20px auto;
+  }
+}
