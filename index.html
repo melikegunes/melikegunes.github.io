@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Conversion Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" onload="initializeChart()"></script>
+	<style>
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #333; /* Dark background color */
+    color: #fff; /* Light text color for contrast */
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: auto; /* Adds scroll if necessary */
+}
+
+.container {
+    text-align: center;
+    background: #222; /* Darker background for the container */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+input[type="file"], select, input[type="number"] {
+    background-color: #555; /* Darker background for inputs */
+    color: #fff; /* Light text for inputs */
+    border: none;
+    padding: 8px 10px;
+    border-radius: 5px;
+    margin-top: 10px; /* Ensures consistent spacing */
+}
+
+button {
+    background-color: #444; /* Dark background for buttons */
+    color: #ccc; /* Light color for text on buttons */
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #666; /* Lighter background on hover */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #555; /* Darker border color */
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #444; /* Dark header background */
+}
+
+
+	
+	</style>
+</head>
+<body>
+    
+
+<div id="controls">
+<h1>Currency Conversion Tool</h1>
+    <button onclick="fetchData()">Fetch Data</button>
+    <div id="currencyConverterContainer"></div>
+
+    <button onclick="addCurrencyRow()">Add Row</button>
+    <button onclick="addFundRow()">Add Fund Row</button>
+    <button onclick="exportToCSV()">Export Portfolio to CSV</button>
+
+    <input type="file" id="fileInput" accept=".csv">
+    <button id="importCSVButton" onclick="importCSV()" disabled>Import Portfolio from CSV</button>
+
+    <button onclick="drawChart()">Show Graph</button>
+
+    <h2>Total Value: <span id="totalValue">0</span></h2>
+</div>
+
+<div id="visualization">
+    <canvas id="portfolioChart"></canvas>
+    <div id="aggregatedDataTable"></div>
+</div>
+
+
+    <script>
+        let currenciesData = {};
+        let rowCount = 0;
+        let fundPrices = {};
+
+        async function fetchCurrencyData(url) {
+            try {
+                const response = await axios.get(`https://cors-anywhere.herokuapp.com/${url}`, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                return response.data;
+            } catch (error) {
+                console.error(`Error fetching data from ${url}:`, error);
+                return '';
+            }
+        }
+
+        async function fetchData() {
+    const urls = {
+        Gold: 'https://canlidoviz.com/altin-fiyatlari/kapali-carsi/gram-altin',
+        Gumus: 'https://canlidoviz.com/altin-fiyatlari/kapali-carsi/gumus',
+        USD: 'https://canlidoviz.com/doviz-kurlari/dolar',
+        EUR: 'https://canlidoviz.com/doviz-kurlari/euro',
+        Bilezik: 'https://canlidoviz.com/altin-fiyatlari/kapali-carsi/22-ayar-bilezik'
+    };
+
+    const fetchPromises = Object.entries(urls).map(([currency, url]) => 
+        fetchCurrencyData(url).then(htmlData => {
+            currenciesData[currency] = parseCurrencyData(htmlData);
+        })
+    );
+
+    await Promise.all(fetchPromises);
+    addCurrencyRow(); // Add initial row for convenience
+}
+
+
+    // Place it here after your fetchData function
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchData().then(() => {
+            // Enable the CSV import button only after data is fetched
+            document.getElementById('importCSVButton').disabled = false;
+        });
+    });
+
+
+        function parseCurrencyData(htmlData) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlData, "text/html");
+            const rows = doc.querySelectorAll("tbody tr");
+            const currencyData = [];
+
+            rows.forEach(row => {
+                const columns = row.querySelectorAll('td');
+                if (columns.length >= 3) {
+                    const bankName = columns[0].textContent.trim().split('\n')[0];
+                    const buyingPrice = parseFloat(columns[1].textContent.trim());
+                    const sellingPrice = parseFloat(columns[2].textContent.trim());
+                    if (!isNaN(buyingPrice) && !isNaN(sellingPrice)) {
+                            currencyData.push({
+                                Bank: bankName,
+                                Buy: sellingPrice,
+                                Sell: buyingPrice
+                            });
+                        }
+                }
+            });
+
+            return currencyData;
+        }
+
+        function addCurrencyRow() {
+            const container = document.getElementById('currencyConverterContainer');
+            const row = document.createElement('div');
+            row.className = 'currency-row';
+            row.innerHTML = `
+                <select onchange="updateBankOptions(this)">
+                    <option value="">Select Currency</option>
+                    ${Object.keys(currenciesData).map(currency => `<option value="${currency}">${currency}</option>`).join('')}
+                </select>
+                <select onchange="calculateRowTotal(this)"></select>
+                <input type="number" placeholder="Enter amount" oninput="calculateRowTotal(this)">
+                <span class="calculated-value">0</span>
+            `;
+            container.appendChild(row);
+            rowCount++;
+        }
+
+        function updateBankOptions(selectElement) {
+            const currency = selectElement.value;
+            const bankSelect = selectElement.nextElementSibling;
+            bankSelect.innerHTML = '<option value="">Select Bank</option>';
+            if (currency) {
+                currenciesData[currency].forEach(bankData => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(bankData);
+                    option.textContent = bankData.Bank;
+                    bankSelect.appendChild(option);
+                });
+            }
+        }
+
+        function calculateRowTotal(inputElement) {
+            const row = inputElement.closest('.currency-row');
+            const bankSelect = row.querySelector('select:nth-child(2)');
+            const amountInput = row.querySelector('input');
+            const valueDisplay = row.querySelector('.calculated-value');
+
+            const bankData = JSON.parse(bankSelect.value || '{}');
+            const amount = parseFloat(amountInput.value);
+            const value = bankData && amount ? amount * bankData.Sell : 0;
+            valueDisplay.textContent = value.toFixed(2);
+
+            calculateTotal();
+        }
+
+
+        async function fetchFundPrice(fundCode) {
+    const url = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod=${fundCode}`;
+    try {
+        const response = await axios.get(`https://cors-anywhere.herokuapp.com/${url}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(response.data, 'text/html');
+        const listItems = Array.from(doc.querySelectorAll('li'));
+        const fundPriceItem = listItems.find(li => li.textContent.includes("Son Fiyat (TL)"));
+        if (fundPriceItem) {
+            const priceElement = fundPriceItem.querySelector('span');
+            if (priceElement) {
+                const priceText = priceElement.textContent.replace(',', '.');
+                console.log(`Fund price fetched: ${priceText}`); // Debugging output
+                return parseFloat(priceText);
+            }
+        }
+        console.error('Price element not found for fund');
+        return null;
+    } catch (error) {
+        console.error(`Error fetching fund data for ${fundCode}:`, error);
+        return null;
+    }
+}
+
+        async function addFundRow() {
+            const container = document.getElementById('currencyConverterContainer');
+            const row = document.createElement('div');
+            row.className = 'fund-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Enter Fund Code" onchange="updateFundPrice(this)">
+                <input type="number" placeholder="Enter amount" oninput="calculateFundTotal(this)">
+                <span class="calculated-value">0</span>
+            `;
+            container.appendChild(row);
+        }
+
+        async function updateFundPrice(inputElement) {
+            const fundCode = inputElement.value.toUpperCase();
+            const price = await fetchFundPrice(fundCode);
+            if (price) {
+                inputElement.dataset.price = price;
+            } else {
+                inputElement.dataset.price = "0"; // Reset if not found
+            }
+            calculateFundTotal(inputElement);
+        }
+
+        function calculateFundTotal(inputElement) {
+            const row = inputElement.closest('.fund-row');
+            const price = parseFloat(row.querySelector('input[type="text"]').dataset.price);
+            const amount = parseFloat(row.querySelector('input[type="number"]').value);
+            const valueDisplay = row.querySelector('.calculated-value');
+
+            const totalValue = price * amount;
+            valueDisplay.textContent = totalValue.toFixed(2);
+
+            calculateTotal();
+        }
+
+
+
+        function calculateTotal() {
+            const values = document.querySelectorAll('.calculated-value');
+            const total = Array.from(values).reduce((sum, valueDisplay) => sum + parseFloat(valueDisplay.textContent), 0);
+            document.getElementById('totalValue').textContent = total.toFixed(2);
+        }
+
+        function exportToCSV() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Currency,Bank,Amount,Value\n"; // CSV header
+
+    const rows = document.querySelectorAll('.currency-row, .fund-row');
+    rows.forEach(row => {
+        const currencyOrFund = row.querySelector('select, input[type="text"]').value;
+        const bank = row.querySelector('select:nth-child(2)') ? row.querySelector('select:nth-child(2) option:checked').textContent : 'Fund';
+        const amount = row.querySelector('input[type="number"]').value;
+        const value = row.querySelector('.calculated-value').textContent;
+
+        let dataString = `${currencyOrFund},${bank},${amount},${value}`;
+        csvContent += dataString + "\n";
+    });
+
+    // Add Total Value at the end
+    const totalValue = document.getElementById('totalValue').textContent;
+    csvContent += `Total,,,${totalValue}`;
+
+    // Create a link and trigger download
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "portfolio_data.csv");
+    document.body.appendChild(link); // Required for FF
+
+    link.click(); // This will download the data file named "portfolio_data.csv".
+    document.body.removeChild(link); // Clean up
+}
+
+
+
+function addCurrencyRow(currency = '', bankDataString = '', amount = '', value = '') {
+    const container = document.getElementById('currencyConverterContainer');
+    const row = document.createElement('div');
+    row.className = 'currency-row';
+    row.innerHTML = `
+        <select onchange="updateBankOptions(this)">
+            <option value="">Select Currency</option>
+            ${Object.keys(currenciesData).map(c => `<option value="${c}" ${currency === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        <select onchange="calculateRowTotal(this)"><option value="">Select Bank</option></select>
+        <input type="number" placeholder="Enter amount" value="${amount}" oninput="calculateRowTotal(this)">
+        <span class="calculated-value">${value}</span>
+    `;
+    container.appendChild(row);
+
+    // This ensures that the bank select is populated and the correct option is selected
+    if (currency && currency !== 'Fund') {
+        updateBankOptions(row.querySelector('select:first-child'), bankDataString);
+    }
+    setupRowEventListeners(row); // Attach event listeners
+}
+
+function updateBankOptions(selectElement, selectedBankData = null) {
+    const currency = selectElement.value;
+    const bankSelect = selectElement.nextElementSibling;
+    bankSelect.innerHTML = '<option value="">Select Bank</option>';
+    if (currency && currenciesData[currency]) {
+        currenciesData[currency].forEach(bankData => {
+            const option = document.createElement('option');
+            option.value = JSON.stringify(bankData);
+            option.textContent = bankData.Bank;
+            option.selected = bankData.Bank === selectedBankData;
+            bankSelect.appendChild(option);
+        });
+    }
+    if (selectedBankData) {
+        calculateRowTotal(selectElement.nextElementSibling.nextElementSibling); // Force recalculation if necessary
+    }
+}
+function addFundRow(fundCode = '', amount = '', value = '') {
+    const container = document.getElementById('currencyConverterContainer');
+    const row = document.createElement('div');
+    row.className = 'fund-row';
+    row.innerHTML = `
+        <input type="text" placeholder="Enter Fund Code" value="${fundCode}" onchange="updateFundPrice(this)">
+        <input type="number" placeholder="Enter amount" value="${amount}" oninput="calculateFundTotal(this)">
+        <span class="calculated-value">${value}</span>
+    `;
+    container.appendChild(row);
+    setupRowEventListeners(row);
+}
+
+async function updateFundPrice(inputElement) {
+    const fundCode = inputElement.value.toUpperCase();
+    const price = await fetchFundPrice(fundCode);
+    if (price) {
+        inputElement.dataset.price = price;
+        calculateFundTotal(inputElement.nextElementSibling);
+    } else {
+        inputElement.dataset.price = "0"; // Reset if not found
+        calculateFundTotal(inputElement.nextElementSibling);
+    }
+}
+
+function importCSV() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            const csvData = event.target.result;
+            document.getElementById('currencyConverterContainer').innerHTML = ''; // Clear existing rows
+            const rows = csvData.split("\n").slice(1, -1); // Skip header and last empty line
+            for (let row of rows) {
+                const [currency, bank, amount, value] = row.split(',');
+                if (bank.trim() === 'Fund') {
+                    addFundRow(currency.trim(), amount.trim(), value.trim());
+                    await updateFundPrice(document.querySelector('.fund-row:last-child input[type="text"]'));
+                } else {
+                    addCurrencyRow(currency.trim(), bank.trim(), amount.trim(), value.trim());
+                }
+            }
+            calculateTotal();
+        };
+        reader.readAsText(file);
+    } else {
+        alert('No file selected!');
+    }
+}
+
+async function updateFundPrice(inputElement) {
+    const fundCode = inputElement.value.toUpperCase();
+    const price = await fetchFundPrice(fundCode);
+    if (price) {
+        inputElement.dataset.price = price;
+        calculateFundTotal(inputElement.nextElementSibling); // Trigger recalculation of fund total
+    } else {
+        inputElement.dataset.price = "0"; // Reset if not found
+        calculateFundTotal(inputElement.nextElementSibling); // Reset displayed value
+    }
+}
+
+
+function setupRowEventListeners(row) {
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length === 2) { // Fund rows have two inputs
+        const fundInput = inputs[0]; // Fund code input
+        const amountInput = inputs[1]; // Amount input
+
+        fundInput.onchange = () => updateFundPrice(fundInput);
+        amountInput.oninput = () => calculateFundTotal(amountInput);
+    } else if (inputs.length === 1) { // Currency rows have one input for amount
+        const amountInput = inputs[0];
+        amountInput.oninput = () => calculateRowTotal(amountInput);
+    }
+}
+function calculateRowTotal(inputElement) {
+    const row = inputElement.closest('.currency-row, .fund-row');
+    const bankSelect = row.querySelector('select:nth-child(2)');
+    const valueDisplay = row.querySelector('.calculated-value');
+
+    let sellPrice = inputElement.dataset.price || (bankSelect ? JSON.parse(bankSelect.value || '{}').Sell : 0);
+    const amount = parseFloat(inputElement.value || 0);
+    const value = sellPrice * amount;
+    valueDisplay.textContent = isNaN(value) ? '0.00' : value.toFixed(2);
+
+    calculateTotal();
+}
+
+// Ensure this function is modified to handle the logic without errors
+function calculateTotal() {
+    let total = 0;
+    document.querySelectorAll('.calculated-value').forEach(element => {
+        total += parseFloat(element.textContent || 0);
+    });
+    document.getElementById('totalValue').textContent = total.toFixed(2);
+}
+
+function aggregateDataForChart() {
+    const rows = document.querySelectorAll('.currency-row, .fund-row');
+    const dataAggregated = {
+        'Bilezik':0,
+        'Gold': 0,
+        'EUR': 0,
+        'USD': 0,
+        'Gumus': 0,
+        'Fund': 0  // Aggregate all funds here
+    };
+
+
+
+
+
+    rows.forEach(row => {
+        const currencyOrFund = row.querySelector('select, input[type="text"]').value;
+        const bank = row.querySelector('select:nth-child(2)') ? row.querySelector('select:nth-child(2) option:checked').textContent : 'Fund';
+        const valueDisplay = row.querySelector('.calculated-value');
+        const value = parseFloat(valueDisplay.textContent) || 0;
+
+
+        // Directly check if the currency or fund is one of the predefined categories or a fund
+        if (dataAggregated.hasOwnProperty(currencyOrFund)) {
+            dataAggregated[currencyOrFund] += value;  // Aggregate value under the corresponding category
+        } else {
+            // This block can handle unexpected or new categories dynamically if needed
+            console.warn(`Unrecognized currency/fund: ${currencyOrFund}`);
+            // Optionally add unrecognized types dynamically to the aggregation
+            dataAggregated['Fund'] += value;
+        }
+    });
+    console.log(dataAggregated);
+    return dataAggregated;
+}
+
+
+let chartInstance = null; // This variable will hold the chart instance globally
+
+function drawChart() {
+    const ctx = document.getElementById('portfolioChart').getContext('2d');
+
+    // Check if a chart instance already exists
+    if (chartInstance) {
+        chartInstance.destroy(); // Destroy the existing chart instance if it exists
+    }
+
+    const aggregatedData = aggregateDataForChart(); // Aggregate data for the chart
+
+    // Create a new chart instance
+    chartInstance = new Chart(ctx, {
+        type: 'pie', // Type of chart
+        data: {
+            labels: Object.keys(aggregatedData), // Categories from aggregated data
+            datasets: [{
+                label: 'Portfolio Value',
+                data: Object.values(aggregatedData), // Values from aggregated data
+                backgroundColor: [
+                    '#e63946', // A bright red
+                    '#f1faee', // A light off-white
+                    '#a8dadc', // Light teal
+                    '#457b9d', // Soft blue
+                    '#f4a261', // Sandy brown
+                    '#2a9d8f'  // Muted green
+                ],
+                borderColor: [
+                    '#e63946',
+                    '#f1faee',
+                    '#a8dadc',
+                    '#457b9d',
+                    '#f4a261',
+                    '#2a9d8f'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: '#fff' // Light color for the legend text
+                    }
+                },
+            }
+        }
+    });
+    // Create and populate the data table
+    createDataTable(aggregatedData);
+}
+
+
+function createDataTable(data) {
+    const container = document.getElementById('aggregatedDataTable');
+    container.innerHTML = ''; // Clear previous table contents if any
+    const table = document.createElement('table');
+    table.setAttribute('border', '1');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = '<th>Currency/Fund</th><th>Value</th>';
+    thead.appendChild(headerRow);
+
+    Object.entries(data).forEach(([key, value]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${key}</td><td>${value.toFixed(2)}</td>`;
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+</body>
+</html>
